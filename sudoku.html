@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Sudoku Game</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            text-align: center;
+            background-color: #f9f9f9;
+        }
+        table {
+            border-collapse: collapse;
+            margin: 20px auto;
+        }
+        td {
+            border: 1px solid #888;
+            width: 40px;
+            height: 40px;
+            text-align: center;
+        }
+        input {
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            font-size: 18px;
+            border: none;
+        }
+        input:disabled {
+            background-color: #e0e0e0;
+            font-weight: bold;
+        }
+        .bold-border {
+            border-width: 2px !important;
+        }
+        button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Sudoku Game</h1>
+<table id="sudoku-board"></table>
+<button onclick="generateBoard()">New Game</button>
+
+<script>
+    const board = document.getElementById('sudoku-board');
+
+    function generateEmptyBoard() {
+        board.innerHTML = '';
+        for (let row = 0; row < 9; row++) {
+            const tr = document.createElement('tr');
+            for (let col = 0; col < 9; col++) {
+                const td = document.createElement('td');
+                const input = document.createElement('input');
+                input.maxLength = 1;
+                td.appendChild(input);
+                if (col % 3 === 2 && col !== 8) td.classList.add('bold-border');
+                if (row % 3 === 2 && row !== 8) td.style.borderBottomWidth = '2px';
+                tr.appendChild(td);
+            }
+            board.appendChild(tr);
+        }
+    }
+
+    function isSafe(board, row, col, num) {
+        for (let i = 0; i < 9; i++) {
+            if (board[row][i] === num || board[i][col] === num)
+                return false;
+        }
+        const startRow = Math.floor(row / 3) * 3;
+        const startCol = Math.floor(col / 3) * 3;
+        for (let i = 0; i < 3; i++) {
+            for (let j = 0; j < 3; j++) {
+                if (board[startRow + i][startCol + j] === num)
+                    return false;
+            }
+        }
+        return true;
+    }
+
+    function solve(board) {
+        for (let row = 0; row < 9; row++) {
+            for (let col = 0; col < 9; col++) {
+                if (board[row][col] === 0) {
+                    for (let num = 1; num <= 9; num++) {
+                        if (isSafe(board, row, col, num)) {
+                            board[row][col] = num;
+                            if (solve(board)) return true;
+                            board[row][col] = 0;
+                        }
+                    }
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    function generateFullBoard() {
+        let grid = Array.from({ length: 9 }, () => Array(9).fill(0));
+        solve(grid);
+        return grid;
+    }
+
+    function removeCells(grid, count) {
+        let removed = 0;
+        while (removed < count) {
+            const row = Math.floor(Math.random() * 9);
+            const col = Math.floor(Math.random() * 9);
+            if (grid[row][col] !== 0) {
+                grid[row][col] = 0;
+                removed++;
+            }
+        }
+        return grid;
+    }
+
+    function generateBoard() {
+        generateEmptyBoard();
+        let solution = generateFullBoard();
+        let puzzle = removeCells(JSON.parse(JSON.stringify(solution)), 50); // adjust difficulty here
+        const inputs = board.querySelectorAll('input');
+        for (let row = 0; row < 9; row++) {
+            for (let col = 0; col < 9; col++) {
+                let val = puzzle[row][col];
+                let input = inputs[row * 9 + col];
+                if (val !== 0) {
+                    input.value = val;
+                    input.disabled = true;
+                } else {
+                    input.value = '';
+                    input.disabled = false;
+                }
+            }
+        }
+    }
+
+    window.onload = generateBoard;
+</script>
+
+</body>
+</html>
